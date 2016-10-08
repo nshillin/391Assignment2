@@ -1,9 +1,20 @@
+/* Clear and prepare database */
 drop table poi;
+drop table poi_tag;
 
-CREATE VIRTUAL TABLE poi USING rtree(
-   id, uid,              -- Integer primary key
-   minX, maxX,      -- Minimum and maximum X coordinate
-   minY, maxY       -- Minimum and maximum Y coordinate
-);
+.separator "\t"
 
-.import poi_edited.tsv poi
+create table poi(
+id INTEGER NOT NULL PRIMARY KEY,
+uid INTEGER NOT NULL,
+minX FLOAT NOT NULL,
+maxX FLOAT NOT NULL,
+minY FLOAT NOT NULL,
+maxY FLOAT NOT NULL);
+.import poi_translated.tsv poi
+
+create table poi_tag(
+id INTEGER NOT NULL REFERENCES poi,
+key TEXT NOT NULL,
+value TEXT NOT NULL);
+.import poi_tag.tsv poi_tag
