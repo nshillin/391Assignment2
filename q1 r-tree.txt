@@ -1,0 +1,9 @@
+drop table poi;
+
+CREATE VIRTUAL TABLE poi USING rtree(
+   id, uid,              -- Integer primary key
+   minX, maxX,      -- Minimum and maximum X coordinate
+   minY, maxY       -- Minimum and maximum Y coordinate
+);
+
+.import poi_edited.tsv poi
