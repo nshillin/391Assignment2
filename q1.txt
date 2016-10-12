@@ -1,4 +1,4 @@
-drop table poirtree
+drop table poirtree;
 
 CREATE VIRTUAL TABLE poirtree USING rtree(
 	id,
