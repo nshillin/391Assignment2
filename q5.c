@@ -39,10 +39,10 @@ int main(int argc, char **argv) {
 		boxes[i][3] = boxes[i][2] + l;
 	}
 	
-	int interval[2];
+	struct timespec start, finish;
 	char select_string[255];
 
-	interval[0] = time(NULL);
+	clock_gettime(CLOCK_REALTIME, &start);
 	
 	for (int i = 0; i < 100; i++) {
 		check = sprintf(select_string, "SELECT COUNT(*) FROM poirtree \
@@ -60,10 +60,11 @@ int main(int argc, char **argv) {
 			sqlite3_finalize(stmt);
 		}
 	}
-	interval[1] = time(NULL);
-	float avgTime_rTree = (float)(interval[1] - interval[0]) / 2; //(1000 ms/s)/(2000 queries) = 1/2 ms/query
-
-	interval[0] = time(NULL);
+	clock_gettime(CLOCK_REALTIME, &finish);
+	//1000 ms/s / 2000 queries = 1/2
+	float avgTime_rTree = ((float)(finish.tv_sec - start.tv_sec) + (float)(finish.tv_nsec - start.tv_nsec)/1000000000) / 2;
+	
+	clock_gettime(CLOCK_REALTIME, &start);
 	
 	for (int i = 0; i < 100; i++) {
 		check = sprintf(select_string, "SELECT COUNT(*) FROM poi \
@@ -82,12 +83,11 @@ int main(int argc, char **argv) {
 		}
 	}
 	
-	interval[1] = time(NULL);
-	float avgTime_control = (float)(interval[1] - interval[0]) / 2;
+	clock_gettime(CLOCK_REALTIME, &finish);
+	float avgTime_control = ((float)(finish.tv_sec - start.tv_sec) + (float)(finish.tv_nsec - start.tv_nsec)/1000000000) / 2;
 	
-	printf("Parameter l: %i\n\
-			Average runtime with r-tree: %f\n\
-			Average runtime without r-tree: %f\n", l, avgTime_rTree, avgTime_control);
+	printf("Parameter l: %i\nAverage runtime with r-tree: %f ms\nAverage runtime without r-tree: %f ms\n",
+			l, avgTime_rTree, avgTime_control);
 	
 	return(0);
 }
