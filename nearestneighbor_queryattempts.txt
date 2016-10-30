@@ -1,4 +1,4 @@
-//gets all direct/indirect children of node 1082
+//gets all direct/indirect children of node 1
 
 WITH RECURSIVE rChild(nodeno, parentnode) AS (
 	SELECT nodeno, parentnode FROM poirtree_parent UNION
@@ -6,19 +6,30 @@ WITH RECURSIVE rChild(nodeno, parentnode) AS (
 	FROM poirtree_parent, rChild
 	WHERE rChild.parentnode = poirtree_parent.nodeno)
 SELECT nodeno FROM rChild
-WHERE parentnode = 1082;
+WHERE parentnode = 1;
 
-//gets mbr of node 10 objects
 
-SELECT MIN(minX), MAX(maxX), MIN(minY), MAX(maxY)
-FROM poirtree, poirtree_rowid
+
+
+
+
+(SELECT pp.nodeno n, MIN(minX) minx1, MAX(maxX) maxx1, MIN(minY) miny1, MAX(maxY) maxy1
+FROM poirtree p, poirtree_rowid pr, poirtree_parent pp
 WHERE id = rowid
-AND (nodeno IN
+AND pp.parentnode = 1
+AND (pr.nodeno IN
 (WITH RECURSIVE rChild(nodeno, parentnode) AS (
 	SELECT nodeno, parentnode FROM poirtree_parent UNION
 	SELECT rChild.nodeno, poirtree_parent.parentnode
 	FROM poirtree_parent, rChild
 	WHERE rChild.parentnode = poirtree_parent.nodeno)
 SELECT nodeno FROM rChild
-WHERE parentnode = 10)
-OR nodeno = 10);
+WHERE parentnode = pp.nodeno)
+OR pr.nodeno = pp.nodeno)
+GROUP BY pp.nodeno)
+UNION
+(SELECT id n, minX minx1, maxX maxx1, minY miny1, maxY maxy1
+FROM poirtree p, poirtree_rowid pr
+WHERE id = rowid
+AND pr.nodeno = 1)
+
