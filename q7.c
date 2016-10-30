@@ -5,7 +5,7 @@
 
 float mindist(float point[2], float rect[2][2]); //rect is 2 coordinates, each 2 values
 float minmaxdist(float point[2], float rect[2][2]);
-void nnRecursive(int nodeno);
+void nnRecursive(int nodeno, sqlite3 *db, sqlite3_stmt *stmt);
 
 typedef struct {
 	int nodeno;
@@ -90,10 +90,29 @@ float minmaxdist(float point[2], float rect[2][2]) {
 	return result;
 }
 
-void nnRecursive(int nodeno) {
+void nnRecursive(int nodeno, sqlite3 *db, sqlite3_stmt *stmt) {
 	float nnDist = INFINITY;
+	char *getChildren;
+	sprintf (getChildren, "SELECT nodeno \
+		FROM poirtree_parent \
+		WHERE parentnode = %i;", nodeno);
 	
 	Branch *abl = malloc(sizeof(*abl) * 100);
-	//TODO
+	
+	check = sqlite3_prepare_v2(db, getChildren, -1, &stmt, 0);
+	if(check != SQLITE_OK) {
+		fprintf(stderr, "Cannot prepare statement: %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
+		return(1);
+	}
+	
+	int abl_i = 0;
+	while((check = sqlite3_step(stmt)) == SQLITE_ROW) {
+		Branch b;
+		b.nodeno = sqlite3_column_int(stmt, 0);
+		abl[abl_i] = b;
+		abl_i++;
+	}
+	
 	free (abl);
 }
