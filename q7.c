@@ -18,7 +18,8 @@ typedef struct {
 	Branch *next;
 } Branch;
 
-Branch nnRecursive(int nodeno, sqlite3 *db, sqlite3_stmt *stmt);
+Branch *nnRecursive(int nodeno, sqlite3 *db, sqlite3_stmt *stmt);
+float pruning_min_minmaxdist(Branch *linkedlist);
 
 int main(int argc, char **argv) {
 
@@ -55,8 +56,10 @@ int main(int argc, char **argv) {
 	while((check = sqlite3_step(stmt)) == SQLITE_ROW) { root_no = sqlite3_column_int(stmt, 0) }
 	sqlite3_finalize(stmt);
 
-	Branch nn = nnRecursive(root_no, db, stmt);
-
+	Branch *nn = nnRecursive(root_no, db, stmt);
+	
+	fprintf(stdout, "%i|%f|%f|%f|%f",nn->nodeno,nn->minX,nn->maxX,nn->minY,nn->maxY);
+	
 	sqlite3_close(db);
 	
 	return 0;
@@ -95,8 +98,9 @@ float minmaxdist(float point[2], float rect[2][2]) {
 	return result;
 }
 
-Branch nnRecursive(int nodeno, sqlite3 *db, sqlite3_stmt *stmt) {
+Branch *nnRecursive(int nodeno, sqlite3 *db, sqlite3_stmt *stmt) {
 	float nnDist = INFINITY;
+	Branch *nn = NULL;
 	
 	char leafCheck[255];
 	char getChildren[1000];
@@ -195,40 +199,112 @@ Branch nnRecursive(int nodeno, sqlite3 *db, sqlite3_stmt *stmt) {
 		sqlite3_finalize(stmt);
 	}
 	
-	//Pruning 1
+	//Pruning 1: Remove MBRs farther than furthest point of nearest MBR
 	Branch *ll_pointer = nodes_head;
 	float nodes_minminmax = pruning_min_minmaxdist(nodes_head);
 	while (ll_pointer != NULL) {
 		if (ll_pointer->MinDist > nodes_minminmax) {
 			//Remove link
 			Branch *buffer = ll_pointer;
-			if (ll_pointer->prev == NULL) { nodes_head = ll_pointer->next; }
-			else { ll_pointer->prev->next = ll_pointer->next; }
-			if (ll_pointer->next == NULL) { nodes_tail = ll_pointer->prev; }
-			else { ll_pointer->next->prev = ll_pointer->prev; }
+			ll_pointer = ll_pointer->next;
+			if (buffer->prev == NULL) { nodes_head = buffer->next; }
+			else { buffer->prev->next = buffer->next; }
+			if (buffer->next == NULL) { nodes_tail = buffer->prev; }
+			else { buffer->next->prev = buffer->prev; }
 			free(buffer);
 		}
 	}
-	//Pruning 2
+	//Pruning 2: Remove objects farther than furthest point of nearest MBR
 	ll_pointer = objects_head;
 	while (ll_pointer != NULL) {
 		if (ll_pointer->MinDist > nodes_minminmax) {
 			//Remove link
 			Branch *buffer = ll_pointer;
-			if (ll_pointer->prev == NULL) { nodes_head = ll_pointer->next; }
-			else { ll_pointer->prev->next = ll_pointer->next; }
-			if (ll_pointer->next == NULL) { nodes_tail = ll_pointer->prev; }
-			else { ll_pointer->next->prev = ll_pointer->prev; }
+			ll_pointer = ll_pointer->next;
+			if (buffer->prev == NULL) { objects_head = buffer->next; }
+			else { buffer->prev->next = buffer->next; }
+			if (buffer->next == NULL) { objects_tail = buffer->prev; }
+			else { buffer->next->prev = buffer->prev; }
 			free(buffer);
 		}
 	}
 	
-	free (nodes);
-	free (objects);
-	return NULL;
+	ll_pointer = nodes_head;
+	while (ll_pointer != NULL) {
+		//Run nearestneighbor on branch, add to objects (will return object), delete branch
+		Branch *b = nnRecursive(ll_pointer->nodeno, db, stmt);
+		
+		if (objects_head == NULL) { objects_head = b; }
+		if (objects_tail != NULL) { objects_tail->next = b; }
+		b->prev = objects_tail;
+		objects_tail = b;
+
+		Branch *buffer = ll_pointer;
+		ll_pointer = ll_pointer->next;
+		if (buffer->prev == NULL) { nodes_head = buffer->next; }
+		else { buffer->prev->next = buffer->next; }
+		if (buffer->next == NULL) { nodes_tail = buffer->prev; }
+		else { buffer->next->prev = buffer->prev; }
+		free(buffer);
+		
+		//Pruning 2: Remove objects farther than furthest point of nearest MBR
+		Branch *ll_pointer2 = objects_head;
+		while (ll_pointer2 != NULL) {
+			if (ll_pointer2->MinDist > nodes_minminmax) {
+				//Remove link
+				Branch *buffer2 = ll_pointer2;
+				ll_pointer2 = ll_pointer2->next;
+				if (buffer2->prev == NULL) { objects_head = buffer2->next; }
+				else { buffer2->prev->next = buffer2->next; }
+				if (buffer2->next == NULL) { objects_tail = buffer2->prev; }
+				else { buffer2->next->prev = buffer2->prev; }
+				free(buffer2);
+			}
+		}
+
+		//Pruning 3: Remove MBRs farther than furthest point of nearest object
+		ll_pointer2 = nodes_head;
+		float objs_minminmax = pruning_min_minmaxdist(objects_head);
+		while (ll_pointer2 != NULL) {
+			if (ll_pointer2->MinDist > objs_minminmax) {
+				//Remove link
+				Branch *buffer2 = ll_pointer2;
+				ll_pointer2 = ll_pointer2->next;
+				if (buffer2->prev == NULL) { nodes_head = buffer2->next; }
+				else { buffer2->prev->next = buffer2->next; }
+				if (buffer2->next == NULL) { nodes_tail = buffer2->prev; }
+				else { buffer2->next->prev = buffer2->prev; }
+				free(buffer2);
+			}
+		}
+	}
+	//At this point: only objects are left as nn candidates.
+	ll_pointer = objects_head;
+	while (ll_pointer != NULL) {
+		if (ll_pointer->MinDist < nnDist) {
+			nnDist = ll_pointer->minDist;
+			nn = ll_pointer;
+			ll_pointer = ll_pointer->next;
+		}
+	}
+	//free linked lists.
+	ll_pointer = nodes_head;
+	while (ll_pointer != NULL) {
+		Branch *buffer = ll_pointer;
+		ll_pointer = ll_pointer->next;
+		free(buffer);
+	}
+	ll_pointer = objects_head;
+	while (ll_pointer != NULL) {
+		Branch *buffer = ll_pointer;
+		ll_pointer = ll_pointer->next;
+		free(buffer);
+	}
+		
+	return nn;
 }
 
-pruning_min_minmaxdist(Branch *linkedlist) { //Pass in the head of a linked list
+float pruning_min_minmaxdist(Branch *linkedlist) { //Pass in the head of a linked list
 	float result = INFINITY;
 	while (linkedlist != NULL) {
 		if (linkedlist->MinMaxDist < result) { result = linkedlist->MinMaxDist; }
