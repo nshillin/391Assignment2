@@ -45,6 +45,5 @@ int main(int argc, char **argv){
 																	 "and key = 'class' and value = '%s';" \
 																	 ,x1,y1,x2,y2,class);
 
-	printf("%s\n", sql_stmt);
 	printQuery(db,sql_stmt);
 }
