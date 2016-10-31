@@ -38,7 +38,7 @@ int main(int argc, char **argv){
 	char *x2 = argv[3];
 	char *y2 = argv[4];
 	char *class = argv[5];
-	char *sql_stmt = sqlite3_mprintf("select distinct poi.id from poi, poi_tag " \
+	char *sql_stmt = sqlite3_mprintf("select distinct poi.id from poirtree as poi, poi_tag " \
 																	 "where poi.id = poi_tag.id " \
 																	 "and minX>=%s and minY>=%s " \
 																	 "and maxX<=%s and maxY<=%s " \
