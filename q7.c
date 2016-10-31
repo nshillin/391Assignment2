@@ -102,17 +102,16 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 	if((check = sqlite3_step(stmt)) == SQLITE_ROW) { //true if node, false if object
 		regcomp(&reg, "[0-9]+\\.?[0-9]*", REG_EXTENDED);
 		const char *columnText = sqlite3_column_text(stmt, 0);
-		printf("%s\n", columnText);
-		printf("%i\n", (int)numOfMatches);
 		while (regexec(&reg, columnText, numOfMatches, matches, 0) == 0) {
-			if (matches[0].rm_eo-matches[0].rm_so>0
-				&&matches[0].rm_eo-matches[0].rm_so<strlen(columnText)) {
+			int n = matches[0].rm_eo-matches[0].rm_so;
+			if (n>0
+				&&n<strlen(columnText)) {
 				for(int j = matches[0].rm_so; j < matches[0].rm_eo; ++j) {
                 			printf("%c", columnText[j]);
 				}
 				printf("\n");
 			}
-			columnText += matches[0].rm_eo-matches[0].rm_so+1;
+			columnText += matches[0].rm_eo+1;
 		}
 	} else {
 		return(NULL);

@@ -14,19 +14,19 @@ Commands to build:
 Q0: python Q0.py
  // Will produce poi_translated.tsv from poi.tsv (used in Q0.txt)
 
-Q4: gcc -g q4.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1
+Q4: gcc -g q4.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
  // Run with:
 	./a.out <x1> <y1> <x2> <y2> <c>
 
-Q5: gcc -g q5.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1
+Q5: gcc -g q5.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
  // Run with:
 	./a.out <integer value>
 
-Q7: gcc -g q7.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1
+Q7: gcc -g q7.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
  // Run with:
 	
 
-Q8: gcc -g q8.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1
+Q8: gcc -g q8.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
  // Run with:
 	
 
