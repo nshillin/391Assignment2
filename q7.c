@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	}
 
 	Branch *nn = nnRecursive(1, coord, db, stmt);
-
+	//printf("%li,%f\n", nn->nodeno,nn->MinDist);
 	sqlite3_close(db);
 
 	return 0;
@@ -117,14 +117,14 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 				for(int j = matches[0].rm_so; j < matches[0].rm_eo; ++j) {
 					temp[j-matches[0].rm_so] = columnText[j];
 				}
-				if (i==0) { //number is id
+				if (i==0) { //number is nodeno
 					Branch *b = (Branch *)malloc(sizeof(Branch));
 					if (children_head == NULL) { children_head = b; }
 					if (children_tail != NULL) { children_tail->next = b; }
 					b->prev = children_tail;
 					b->next = NULL;
 					children_tail = b;
-					b->id = atoi(temp);
+					b->nodeno = atoi(temp);
 				} else if (i==1) { //number is minX
 					children_tail->minX = atof(temp);
 				} else if (i==2) { //number is maxX
@@ -133,7 +133,7 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 					children_tail->minY = atof(temp);
 				} else { //number is maxY
 					children_tail->maxY = atof(temp);
-					float[2][2] rect = {{children_tail->minX,children_tail->maxX},{children_tail->minY,children_tail->maxY}};
+					float rect[2][2] = {{children_tail->minX,children_tail->maxX},{children_tail->minY,children_tail->maxY}};
 					children_tail->MinDist = mindist(point, rect);
 					children_tail->MinMaxDist = minmaxdist(point, rect);
 				}
@@ -159,7 +159,60 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		}
 	}
 	
-	return NULL;
+	//Recursion
+	temp = children_head;
+	while (temp != NULL) {
+		Branch *buffer = temp;
+		temp = temp->next;
+		Branch *nn = nnRecursive(buffer->nodeno, point, db, stmt);
+		if (nn != NULL) { //If buffer was a node and not an object
+			//Replace node with nearest neighbor object within it
+			if (buffer->prev != NULL) {
+				buffer->prev->next = nn;
+				nn->prev = buffer->prev;
+			}
+			if (buffer->next != NULL) {
+				buffer->next->prev = nn;
+				nn->next = buffer->next;
+			}
+			free(buffer);
+		}
+	}
+	
+	//Pruning
+	temp = children_head;
+	while (temp != NULL) {
+		Branch *buffer = temp;
+		temp = temp->next;
+		if (buffer->MinDist > minminmax) {
+			if (buffer->prev != NULL) { buffer->prev->next = buffer->next; }
+			if (buffer->next != NULL) { buffer->next->prev = buffer->prev; }
+			free(buffer);
+		}
+	}
+	
+	//MinDist
+	temp = children_head;
+	while (temp != NULL) {
+		if (temp->MinDist < nnDist) {
+			nn = temp;
+			nnDist = temp->MinDist;
+		}
+		temp = temp->next;
+	}
+	
+	//free linked list
+	temp = children_head;
+	while (temp != NULL) {
+		Branch *buffer = temp;
+		temp = temp->next;
+		if (buffer != nn) {
+			if (buffer->prev != NULL) { buffer->prev->next = buffer->next; }
+			if (buffer->next != NULL) { buffer->next->prev = buffer->prev; }
+			free(buffer);
+		}
+	}
+	return nn;
 }
 
 float pruning_min_minmaxdist(Branch *linkedlist) { //Pass in the head of a linked list
