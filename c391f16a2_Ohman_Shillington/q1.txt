@@ -1,0 +1,9 @@
+drop table poirtree;
+
+CREATE VIRTUAL TABLE poirtree USING rtree(
+	id,
+	minX, maxX,
+	minY, maxY
+);
+
+INSERT INTO poirtree SELECT id, minX, maxX, minY, maxY FROM poi;
