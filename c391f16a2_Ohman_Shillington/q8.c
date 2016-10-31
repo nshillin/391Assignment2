@@ -4,8 +4,6 @@
 #include <sqlite3.h>
 #include <math.h>
 
-// http://stackoverflow.com/questions/25241406/best-option-for-supplying-quadtree-gps-data-to-an-app
-
 int printQuery(sqlite3 *db, char sql_stmt[], double coord[2], int k) {
 	sqlite3_stmt *stmt;
 	int rc;

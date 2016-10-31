@@ -18,7 +18,7 @@ Q4: gcc -g q4.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
  // Run with:
 	./a.out <x1> <y1> <x2> <y2> <c>
 
-Q5: gcc -g q5.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
+Q5: gcc -g q5.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1
  // Run with:
 	./a.out <integer value>
 
