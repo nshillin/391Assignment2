@@ -9,7 +9,7 @@ float mindist(float point[2], float rect[2][2]); //rect is 2 coordinates, each 2
 float minmaxdist(float point[2], float rect[2][2]);
 
 typedef struct node {
-	long nodeno;
+	unsigned int nodeno;
 	float minX;
 	float minY;
 	float maxX;
@@ -20,7 +20,7 @@ typedef struct node {
 	struct node *next;
 } Branch;
 
-Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt);
+Branch *nnRecursive(unsigned int nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt);
 float pruning_min_minmaxdist(Branch *linkedlist);
 
 int main(int argc, char **argv) {
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	}
 
 	Branch *nn = nnRecursive(1, coord, db, stmt);
-	printf("%li|%f|%f|%f|%f\nMinDist = %f\n", nn->nodeno,nn->minX,nn->maxX,nn->minY,nn->maxY,nn->MinDist);
+	printf("id: %u, (%f, %f) (%f %f), distance = %f\n", nn->nodeno,nn->minX,nn->minY,nn->maxX,nn->maxY,pow(nn->MinDist,0.5));
 	sqlite3_close(db);
 
 	return 0;
@@ -56,7 +56,7 @@ float mindist(float point[2], float rect[2][2]) {
 			result += pow(point[i] - rect[0][i], 2);
 		} else if (point[i] > rect[1][i]) {
 			result += pow(point[i] - rect[1][i], 2);
-		} //else: point is within rect w.r.t. this dimension; 0 distance added
+		} else { result += 0; }
 	}
 	return result;
 }
@@ -81,7 +81,7 @@ float minmaxdist(float point[2], float rect[2][2]) {
 	return result;
 }
 
-Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt) {
+Branch *nnRecursive(unsigned int nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt) {
 	int check;
 	regex_t reg;
 	size_t numOfMatches = 1;
@@ -95,7 +95,7 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 
 	char getChildren[255];
 	sprintf(getChildren, "SELECT rtreenode(2,data) FROM poirtree_node \
-			WHERE nodeno = %li;", nodeno); //MBRs of all children of nodeno
+			WHERE nodeno = %u;", nodeno); //MBRs of all children of nodeno
 
 	float min_minmaxDist = INFINITY; //Smallest minmaxdist, against which mindist values are measured in pruning 1.
 
@@ -132,7 +132,7 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 					children_tail->minY = atof(temp);
 				} else { //number is maxY
 					children_tail->maxY = atof(temp);
-					float rect[2][2] = {{children_tail->minX,children_tail->maxX},{children_tail->minY,children_tail->maxY}};
+					float rect[2][2] = {{children_tail->minX,children_tail->minY},{children_tail->maxX,children_tail->maxY}};
 					children_tail->MinDist = mindist(point, rect);
 					children_tail->MinMaxDist = minmaxdist(point, rect);
 				}
