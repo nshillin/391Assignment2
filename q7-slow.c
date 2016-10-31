@@ -48,12 +48,12 @@ int main(int argc, char **argv){
 	sqlite3_stmt *stmt;
 	int check;
 
-	if (argc != 4) {
-		fprintf(stderr, "Usage: %s <x-coordinate> <y-coordinate> <k>\n", argv[0]);
+	if (argc != 3) {
+		fprintf(stderr, "Usage: %s <x-coordinate> <y-coordinate>\n", argv[0]);
 		return(1);
 	}
 	double coord[2] = {atof(argv[1]), atof(argv[2])};
-	int k = atoi(argv[3]);
+	int k = 1;
 
 	check = sqlite3_open("assignment2.db", &db);
 	if(check != SQLITE_OK) {

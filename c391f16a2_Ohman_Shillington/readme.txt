@@ -24,10 +24,10 @@ Q5: gcc -g q5.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
 
 Q7: gcc -g q7.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
  // Run with:
-	
+	./a.out <x-coordinate> <y-coordinate>
 
 Q8: gcc -g q8.c sqlite3.c -lpthread -ldl -lm -DSQLITE_ENABLE_RTREE=1 -std=c99
  // Run with:
-	
+	./a.out <x-coordinate> <y-coordinate> <k>
 
 We did not collaborate with anyone else to complete this assignment.
