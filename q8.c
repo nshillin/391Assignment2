@@ -25,10 +25,13 @@ int printQuery(sqlite3 *db, char sql_stmt[], double coord[2], int k) {
 		double x = sqlite3_column_double(stmt, 1) + ((sqlite3_column_double(stmt, 2) - sqlite3_column_double(stmt, 1))/2);
 		double y = sqlite3_column_double(stmt, 3) + ((sqlite3_column_double(stmt, 4) - sqlite3_column_double(stmt, 3))/2);
 		double distance = sqrt(pow(x-coord[0], 2) + pow(y-coord[1], 2));
-		for (int i = 0; i<k; i++) {
-			if (mindist[i] > distance) {
-				mindist[i] = distance;
-				point[i] = sqlite3_column_double(stmt, 0);
+		for (int position = 0; position<k; position++) {
+			if (mindist[position] > distance) {
+				for (int i = k-1; i>position; i--) {
+					mindist[i] = mindist[i-1];
+				}
+				mindist[position] = distance;
+				point[position] = sqlite3_column_double(stmt, 0);
 				break;
 			}
 		}
