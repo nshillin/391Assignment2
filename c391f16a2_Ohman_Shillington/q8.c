@@ -37,7 +37,7 @@ int printQuery(sqlite3 *db, char sql_stmt[], double coord[2], int k) {
 		}
 	}
 	for (int i = 0; i<k; i++) {
-		printf("Distance = %f, Point = %.0lf\n", mindist[i], point[i]);
+		printf("Point = %.0lf, Distance to centre = %f\n", point[i], mindist[i]);
 	}
 	sqlite3_finalize(stmt);
 	return 0;
