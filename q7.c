@@ -100,16 +100,17 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		return(NULL);
 	}
 	if((check = sqlite3_step(stmt)) == SQLITE_ROW) { //true if node, false if object
-		regcomp(&reg, ".*\\(5\\).*", REG_EXTENDED); //placeholder, not fully useful yet but should match in theory
-		char *columnText = sqlite3_column_text(stmt, 0);
+		regcomp(&reg, "\\{[0-9]+\\s[0-9]+\\.?[0-9]*\\s[0-9]+\\.?[0-9]*\\s[0-9]+\\.?[0-9]*\\s[0-9]+\\.?[0-9]*\\}", REG_EXTENDED);
+		const char *columnText = sqlite3_column_text(stmt, 0);
 		printf("%s\n", columnText);
 		printf("%i\n", (int)numOfMatches);
-		if (regexec(&reg, columnText, numOfMatches, matches, 0)) {
+		if (regexec(&reg, columnText, numOfMatches, matches, 0) == 0) {
 			for (int i = 0; i < numOfMatches; i++) {
-				if (matches[i].rm_eo-matches[i].rm_so<sizeof(columnText)) {
+				if (matches[i].rm_eo-matches[i].rm_so>0
+					&&matches[i].rm_eo-matches[i].rm_so<strlen(columnText)) {
 					printf("i = %i\n", i);
 					for(int j = 0; j < matches[i].rm_eo-matches[i].rm_so; ++j) {
-                	printf("%c", columnText[j]);
+                				printf("%c", columnText[j]);
 					}
 					printf("\n");
 				}
