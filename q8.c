@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <math.h>
 
 // http://stackoverflow.com/questions/25241406/best-option-for-supplying-quadtree-gps-data-to-an-app
 
-int printQuery(sqlite3 *db, char sql_stmt[]) {
+int printQuery(sqlite3 *db, char sql_stmt[], double coord[2], int k) {
 	sqlite3_stmt *stmt;
 	int rc;
 	rc = sqlite3_prepare_v2(db, sql_stmt, -1, &stmt, 0);
@@ -14,35 +15,48 @@ int printQuery(sqlite3 *db, char sql_stmt[]) {
 			sqlite3_close(db);
 			exit(-1);
 	}
+	double mindist[k];
+	int point[k];
+	for (int i = 0; i<k; i++) {
+		mindist[i] = INFINITY;
+		point[i] = 0;
+	}
 	while((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-
-		printf("%s\n", sqlite3_column_text(stmt, 0));
-		printf("%i\n%i\n", sqlite3_column_type(stmt, 1),SQLITE_TEXT);
-
-		//	int size = sqlite3_column_bytes(stmt, 1);
-		//	void* p = sqlite3_column_blob(stmt,1);
-			//data(p, p+size);
-		//	type(sqlite3_column_blob(stmt,1)[size]));
-		//	printf("%s\n", " ");
-	//		char *Z = (char *) malloc(size);
-	//		sqlite3_blob_read(p, Z, size, 0);
+		double x = sqlite3_column_double(stmt, 1) + ((sqlite3_column_double(stmt, 2) - sqlite3_column_double(stmt, 1))/2);
+		double y = sqlite3_column_double(stmt, 3) + ((sqlite3_column_double(stmt, 4) - sqlite3_column_double(stmt, 3))/2);
+		double distance = sqrt(pow(x-coord[0], 2) + pow(y-coord[1], 2));
+		for (int i = 0; i<k; i++) {
+			if (mindist[i] > distance) {
+				mindist[i] = distance;
+				point[i] = sqlite3_column_int(stmt, 0);
+				break;
+			}
+		}
+	}
+	for (int i = 0; i<k; i++) {
+		printf("Distance = %f, Point = %i\n", mindist[i], point[i]);
 	}
 	sqlite3_finalize(stmt);
 	return 0;
 }
 
 int main(int argc, char **argv){
-	if( argc!=3 ){
-		fprintf(stderr, "Usage: %s <x1> <y1>\n", argv[0]);
+	sqlite3 *db;
+	sqlite3_stmt *stmt;
+	int check;
+
+	if (argc != 4) {
+		fprintf(stderr, "Usage: %s <x-coordinate> <y-coordinate> <k>\n", argv[0]);
 		return(1);
 	}
+	double coord[2] = {atof(argv[1]), atof(argv[2])};
+	int k = atoi(argv[3]);
 
-	sqlite3 *db; //the database
-	int rc = sqlite3_open("assignment2.db", &db);
-	if( rc ){
-		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+	check = sqlite3_open("assignment2.db", &db);
+	if(check != SQLITE_OK) {
+		fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
-		exit(-1);
+		return(1);
 	}
 
 	char *x1 = argv[1];
@@ -50,7 +64,7 @@ int main(int argc, char **argv){
 	char *x2 = argv[3];
 	char *y2 = argv[4];
 	char *class = argv[5];
-	char *sql_stmt = sqlite3_mprintf("select nodeno, rtreenode(2,data) from poirtree_node where nodeno=1;");
+	char *sql_stmt = sqlite3_mprintf("select * from poirtree;");
 
-	printQuery(db,sql_stmt);
+	printQuery(db,sql_stmt,coord,k);
 }
