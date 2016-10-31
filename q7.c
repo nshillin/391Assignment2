@@ -29,18 +29,18 @@ int main(int argc, char **argv) {
 		return(1);
 	}
 	float coord[2] = {atof(argv[1]), atof(argv[2])};
-	
+
 	check = sqlite3_open("assignment2.db", &db);
 	if(check != SQLITE_OK) {
 		fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
 		return(1);
 	}
-	
+
 	Branch *nn = nnRecursive(1, coord, db, stmt);
-	
+
 	sqlite3_close(db);
-	
+
 	return 0;
 }
 
@@ -68,7 +68,7 @@ float minmaxdist(float point[2], float rect[2][2]) {
 		else { rm_k = rect[1][k]; }
 		if (point[i] >= (rect[0][i] + rect[1][i])/2) { rM_i = rect[0][i]; }
 		else { rM_i = rect[1][i]; }
-		
+
 		temp_dist = pow(point[k] - rm_k,2) + pow(point[i] - rM_i,2);
 		if (temp_dist < result) {
 			result = temp_dist; //result will be minimum of temp_dist values
@@ -81,17 +81,18 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 	fprintf(stdout, "Beginning nn on node %li\n", nodeno);
 	int check;
 	regex_t reg;
-	size_t numOfMatches = 0;
-	regmatch_t matches[100];
+	size_t numOfMatches = 100;
+	regmatch_t matches[numOfMatches];
+	char *result;
 	float nnDist = INFINITY;
 	Branch *nn = NULL;
-	
+
 	char getChildren[255];
 	sprintf(getChildren, "SELECT rtreenode(2,data) FROM poirtree_node \
 			WHERE nodeno = %li;", nodeno); //MBRs of all children of nodeno
-	
+
 	float min_minmaxDist = INFINITY; //Smallest minmaxdist, against which mindist values are measured in pruning 1.
-	
+
 	check = sqlite3_prepare_v2(db, getChildren, -1, &stmt, 0);
 	if(check != SQLITE_OK) {
 		fprintf(stderr, "Cannot prepare statement: %s\n", sqlite3_errmsg(db));
@@ -99,19 +100,26 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		return(NULL);
 	}
 	if((check = sqlite3_step(stmt)) == SQLITE_ROW) { //true if node, false if object
-		regcomp(&reg, "{[[:digit][:space][:punct]]+}", 0); //placeholder, not fully useful yet but should match in theory
-		
-		while ((check = regexec(&reg, sqlite3_column_text(stmt, 0), numOfMatches, matches, 0)) == 0) {
-			printf("%i\n", (int)numOfMatches);
+		regcomp(&reg, ".*\\(5\\).*", REG_EXTENDED); //placeholder, not fully useful yet but should match in theory
+		char *columnText = sqlite3_column_text(stmt, 0);
+		printf("%s\n", columnText);
+		printf("%i\n", (int)numOfMatches);
+		if (regexec(&reg, columnText, numOfMatches, matches, 0)) {
 			for (int i = 0; i < numOfMatches; i++) {
-				printf("%i\n", i);
+				if (matches[i].rm_eo-matches[i].rm_so<sizeof(columnText)) {
+					printf("i = %i\n", i);
+					for(int j = 0; j < matches[i].rm_eo-matches[i].rm_so; ++j) {
+                	printf("%c", columnText[j]);
+					}
+					printf("\n");
+				}
 			}
 		}
 	} else {
 		return(NULL);
 	}
 	sqlite3_finalize(stmt);
-	
+
 	return NULL;
 }
 

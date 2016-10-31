@@ -7,6 +7,7 @@ string
 sqlite3
 math
 time
+regex
 
 Commands to build:
 
