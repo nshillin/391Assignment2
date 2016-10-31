@@ -1,0 +1,22 @@
+Parameter l: 25
+Average runtime with r-tree: 0.087297 ms
+Average runtime without r-tree: 31.002430 ms
+
+Parameter l: 50
+Average runtime with r-tree: 0.118938 ms
+Average runtime without r-tree: 36.289406 ms
+
+Parameter l: 75
+Average runtime with r-tree: 0.185511 ms
+Average runtime without r-tree: 41.424221 ms
+
+Parameter l: 100
+Average runtime with r-tree: 0.222104 ms
+Average runtime without r-tree: 40.843800 ms
+
+Parameter l: 125
+Average runtime with r-tree: 0.304510 ms
+Average runtime without r-tree: 35.491554 ms
+
+
+As the area of the search squares increases, the average runtime with the R-tree increases as well. The average runtime with the standard indices stays more or less consistent, increasing slightly at the beginning and then decreasing again as the search squares get much larger. This shows the R-tree evaluating the bounding box all at once, iterating over more values the larger the box is, and the standard indices applying its conditions one after the other, keeping the search time roughly equivalent to iterating over the database a set number of times. However, the R-tree is much more efficient, never taking up even as much as 1% of the standard indices' runtime in these trials.

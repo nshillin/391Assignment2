@@ -1,0 +1,5 @@
+select rtreenode(3,data) from poirtree_node where nodeno=1;
+// This displays all of the mbrs of the root node, which reveals that the data objects are all in the same node of the tree.
+{0 2 5 23 25} {1 3 7 17 20} {2 1 4 11 13} {3 1 4 0 3} {4 6 9 21 24} {5 7 9 15 20} {6 6 13 3 8} {7 17 20 9 22} {8 19 24 9 12} {9 19 23 6 8} {10 21 26 21 25} {11 20 30 15 17} {12 25 28 12 16} {13 13 17 19 22}
+
+The R-Tree is different because the R-Tree module appears to use an M that is greater than that used in Q2. With a larger set of data, and a larger M, we would most likely achieve the same results using the method from Q2 as well as SQLite3's built in R-Tree function.
