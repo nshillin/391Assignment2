@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	}
 
 	Branch *nn = nnRecursive(1, coord, db, stmt);
-	//printf("%li,%f\n", nn->nodeno,nn->MinDist);
+	printf("%li|%f|%f|%f|%f\nMinDist = %f\n", nn->nodeno,nn->minX,nn->maxX,nn->minY,nn->maxY,nn->MinDist);
 	sqlite3_close(db);
 
 	return 0;
@@ -82,7 +82,6 @@ float minmaxdist(float point[2], float rect[2][2]) {
 }
 
 Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt) {
-	fprintf(stdout, "Beginning nn on node %li\n", nodeno);
 	int check;
 	regex_t reg;
 	size_t numOfMatches = 1;
@@ -154,7 +153,9 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		temp = temp->next;
 		if (buffer->MinDist > minminmax) {
 			if (buffer->prev != NULL) { buffer->prev->next = buffer->next; }
+			else { children_head = buffer->next; }
 			if (buffer->next != NULL) { buffer->next->prev = buffer->prev; }
+			else { children_tail = buffer->prev; }
 			free(buffer);
 		}
 	}
@@ -170,11 +171,11 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 			if (buffer->prev != NULL) {
 				buffer->prev->next = nn;
 				nn->prev = buffer->prev;
-			}
+			} else { children_head = nn; }
 			if (buffer->next != NULL) {
 				buffer->next->prev = nn;
 				nn->next = buffer->next;
-			}
+			} else { children_tail = nn; }
 			free(buffer);
 		}
 	}
@@ -186,7 +187,9 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		temp = temp->next;
 		if (buffer->MinDist > minminmax) {
 			if (buffer->prev != NULL) { buffer->prev->next = buffer->next; }
+			else { children_head = buffer->next; }
 			if (buffer->next != NULL) { buffer->next->prev = buffer->prev; }
+			else { children_tail = buffer->prev; }
 			free(buffer);
 		}
 	}
@@ -208,7 +211,9 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		temp = temp->next;
 		if (buffer != nn) {
 			if (buffer->prev != NULL) { buffer->prev->next = buffer->next; }
+			else { children_head = buffer->next; }
 			if (buffer->next != NULL) { buffer->next->prev = buffer->prev; }
+			else { children_tail = buffer->prev; }
 			free(buffer);
 		}
 	}
