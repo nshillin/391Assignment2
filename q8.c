@@ -16,7 +16,7 @@ int printQuery(sqlite3 *db, char sql_stmt[], double coord[2], int k) {
 			exit(-1);
 	}
 	double mindist[k];
-	int point[k];
+	double point[k];
 	for (int i = 0; i<k; i++) {
 		mindist[i] = INFINITY;
 		point[i] = 0;
@@ -28,13 +28,13 @@ int printQuery(sqlite3 *db, char sql_stmt[], double coord[2], int k) {
 		for (int i = 0; i<k; i++) {
 			if (mindist[i] > distance) {
 				mindist[i] = distance;
-				point[i] = sqlite3_column_int(stmt, 0);
+				point[i] = sqlite3_column_double(stmt, 0);
 				break;
 			}
 		}
 	}
 	for (int i = 0; i<k; i++) {
-		printf("Distance = %f, Point = %i\n", mindist[i], point[i]);
+		printf("Distance = %f, Point = %.0lf\n", mindist[i], point[i]);
 	}
 	sqlite3_finalize(stmt);
 	return 0;
