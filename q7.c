@@ -86,10 +86,10 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 	char *result;
 	float nnDist = INFINITY;
 	Branch *nn = NULL;
-	
+
 	Branch *children_head = NULL;
 	Branch *children_tail = NULL;
-	
+
 	char getChildren[255];
 	sprintf(getChildren, "SELECT rtreenode(2,data) FROM poirtree_node \
 			WHERE nodeno = %li;", nodeno); //MBRs of all children of nodeno
@@ -109,20 +109,16 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		while (regexec(&reg, columnText, numOfMatches, matches, 0) == 0) {
 			int n = matches[0].rm_eo-matches[0].rm_so;
 			if (n>0&&n<strlen(columnText)) {
+				char temp[n];
 				for(int j = matches[0].rm_so; j < matches[0].rm_eo; ++j) {
-                			printf("%c", columnText[j]);
+					temp[j-matches[0].rm_so] = columnText[j];
 				}
-				char *number = (char *)malloc(50*sizeof(char));
-				printf("\n");
-				strncpy(number, columnText[j]+matches[0].rm_so, n);
-				strcpy(number+n, "\0"); //Null terminate
 				if (i==0) { //number is id
 				} else if (i==1) { //number is minX
 				} else if (i==2) { //number is maxX
 				} else if (i==3) { //number is minY
 				} else { //number is maxY
 				}
-				free(number);
 				columnText += matches[0].rm_eo+1;
 				i = (i+1)%5;
 			}
