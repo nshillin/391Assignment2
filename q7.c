@@ -115,7 +115,7 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 				char *number = (char *)malloc(50*sizeof(char));
 				printf("\n");
 				strncpy(number, columnText[j]+matches[0].rm_so, n);
-				strcpy(number+n+1, "\0"); //Null terminate
+				strcpy(number+n, "\0"); //Null terminate
 				if (i==0) { //number is id
 				} else if (i==1) { //number is minX
 				} else if (i==2) { //number is maxX
