@@ -114,10 +114,21 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 					temp[j-matches[0].rm_so] = columnText[j];
 				}
 				if (i==0) { //number is id
+					Branch *b;
+					if (children_head == NULL) { children_head = b; }
+					if (children_tail != NULL) { children_tail->next = b; }
+					b->prev = children_tail;
+					b->next = NULL;
+					children_tail = b;
+					b->id = atoi(temp);
 				} else if (i==1) { //number is minX
+					children_tail->minX = atof(temp);
 				} else if (i==2) { //number is maxX
+					children_tail->maxX = atof(temp);
 				} else if (i==3) { //number is minY
+					children_tail->minY = atof(temp);
 				} else { //number is maxY
+					children_tail->maxY = atof(temp);
 				}
 				columnText += matches[0].rm_eo+1;
 				i = (i+1)%5;
