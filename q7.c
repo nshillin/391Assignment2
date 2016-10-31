@@ -81,7 +81,7 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 	fprintf(stdout, "Beginning nn on node %li\n", nodeno);
 	int check;
 	regex_t reg;
-	size_t numOfMatches = 100;
+	size_t numOfMatches = 1;
 	regmatch_t matches[numOfMatches];
 	char *result;
 	float nnDist = INFINITY;
@@ -100,21 +100,19 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 		return(NULL);
 	}
 	if((check = sqlite3_step(stmt)) == SQLITE_ROW) { //true if node, false if object
-		regcomp(&reg, "\\{[0-9]+\\s[0-9]+\\.?[0-9]*\\s[0-9]+\\.?[0-9]*\\s[0-9]+\\.?[0-9]*\\s[0-9]+\\.?[0-9]*\\}", REG_EXTENDED);
+		regcomp(&reg, "[0-9]+\\.?[0-9]*", REG_EXTENDED);
 		const char *columnText = sqlite3_column_text(stmt, 0);
 		printf("%s\n", columnText);
 		printf("%i\n", (int)numOfMatches);
-		if (regexec(&reg, columnText, numOfMatches, matches, 0) == 0) {
-			for (int i = 0; i < numOfMatches; i++) {
-				if (matches[i].rm_eo-matches[i].rm_so>0
-					&&matches[i].rm_eo-matches[i].rm_so<strlen(columnText)) {
-					printf("i = %i\n", i);
-					for(int j = 0; j < matches[i].rm_eo-matches[i].rm_so; ++j) {
-                				printf("%c", columnText[j]);
-					}
-					printf("\n");
+		while (regexec(&reg, columnText, numOfMatches, matches, 0) == 0) {
+			if (matches[0].rm_eo-matches[0].rm_so>0
+				&&matches[0].rm_eo-matches[0].rm_so<strlen(columnText)) {
+				for(int j = matches[0].rm_so; j < matches[0].rm_eo; ++j) {
+                			printf("%c", columnText[j]);
 				}
+				printf("\n");
 			}
+			columnText += matches[0].rm_eo-matches[0].rm_so+1;
 		}
 	} else {
 		return(NULL);
