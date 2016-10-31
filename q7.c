@@ -10,6 +10,10 @@ float minmaxdist(float point[2], float rect[2][2]);
 
 typedef struct node {
 	long nodeno;
+	float minX;
+	float minY;
+	float maxX;
+	float maxY;
 	float MinDist;
 	float MinMaxDist;
 	struct node *prev;
@@ -114,7 +118,7 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 					temp[j-matches[0].rm_so] = columnText[j];
 				}
 				if (i==0) { //number is id
-					Branch *b;
+					Branch *b = (Branch *)malloc(sizeof(Branch));
 					if (children_head == NULL) { children_head = b; }
 					if (children_tail != NULL) { children_tail->next = b; }
 					b->prev = children_tail;
@@ -129,16 +133,32 @@ Branch *nnRecursive(long nodeno, float point[2], sqlite3 *db, sqlite3_stmt *stmt
 					children_tail->minY = atof(temp);
 				} else { //number is maxY
 					children_tail->maxY = atof(temp);
+					float[2][2] rect = {{children_tail->minX,children_tail->maxX},{children_tail->minY,children_tail->maxY}};
+					children_tail->MinDist = mindist(point, rect);
+					children_tail->MinMaxDist = minmaxdist(point, rect);
 				}
 				columnText += matches[0].rm_eo+1;
 				i = (i+1)%5;
 			}
 		}
-	} else {
+	} else { //This is an object, not a node
 		return(NULL);
 	}
+	
 	sqlite3_finalize(stmt);
-
+	//Pruning
+	float minminmax = pruning_min_minmaxdist(children_head);
+	Branch *temp = children_head;
+	while (temp != NULL) {
+		Branch *buffer = temp;
+		temp = temp->next;
+		if (buffer->MinDist > minminmax) {
+			if (buffer->prev != NULL) { buffer->prev->next = buffer->next; }
+			if (buffer->next != NULL) { buffer->next->prev = buffer->prev; }
+			free(buffer);
+		}
+	}
+	
 	return NULL;
 }
 
